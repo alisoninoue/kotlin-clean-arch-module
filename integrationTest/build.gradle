@@ -1,0 +1,49 @@
+plugins {
+    id "io.micronaut.application" version "1.5.0"
+    id "org.jetbrains.kotlin.plugin.allopen" version "${kotlinVersion}"
+}
+
+application {
+    mainClass.set("br.com.poc.configuration.Application")
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11
+        javaParameters = true
+    }
+}
+
+test {
+    useJUnitPlatform()
+    //finalizedBy jacocoTestReport
+}
+dependencies {
+    implementation project(":application:configuration")
+
+    kaptTest("io.micronaut:micronaut-inject-java")
+    testImplementation("org.testcontainers:testcontainers:1.15.2")
+    testImplementation("org.testcontainers:postgresql:1.15.2")
+    testImplementation("org.testcontainers:kafka:1.15.2")
+    testImplementation("org.testcontainers:junit-jupiter:1.15.2")
+
+    // gRPC
+    implementation("io.micronaut.grpc:micronaut-grpc-server-runtime:$micronautGrpcVersion")
+    implementation("io.micronaut.grpc:micronaut-grpc-client-runtime:$micronautGrpcVersion")
+    implementation("io.grpc:grpc-kotlin-stub:${grpcKotlinVersion}")
+
+    // Testing
+    testImplementation("io.micronaut.test:micronaut-test-junit5")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
+    testImplementation("org.junit.platform:junit-platform-runner:$junitPlatformVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
+    testImplementation("io.micronaut.test:micronaut-test-junit5")
+    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.23.1")
+    testRuntimeOnly("org.jetbrains.spek:spek-junit-platform-engine:1.1.5")
+
+    // Logging
+    runtimeOnly("ch.qos.logback:logback-classic:1.2.3")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.6")
+    testImplementation("io.micronaut.test:micronaut-test-junit5")
+}

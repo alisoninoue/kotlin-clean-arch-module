@@ -1,0 +1,71 @@
+plugins {
+    id "org.jetbrains.kotlin.plugin.allopen" version "${kotlinVersion}"
+    id "org.jetbrains.kotlin.plugin.jpa" version "${kotlinVersion}"
+    id "io.micronaut.application" version "1.5.0"
+}
+
+configurations {
+    developmentOnly
+}
+test.classpath += configurations.developmentOnly
+
+application {
+    mainClass.set("br.com.poc.configuration.Application")
+}
+
+dependencies {
+    compile project(":application:core")
+    compile project(":application:dataproviders")
+    compile project(":application:entrypoints")
+
+    kapt("io.micronaut.data:micronaut-data-processor")
+    kaptTest("io.micronaut:micronaut-inject-java")
+
+    implementation("io.micronaut:micronaut-runtime")
+    implementation("javax.annotation:javax.annotation-api")
+    implementation("io.micronaut:micronaut-management")
+
+    // Logging
+    runtimeOnly("ch.qos.logback:logback-classic:1.2.3")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.6")
+    testImplementation("io.micronaut.test:micronaut-test-junit5")
+}
+
+//
+//jacocoTestReport {
+//    sourceSets sourceSets.main    // important!
+//    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+//}
+//
+//jacocoTestReport {
+//    afterEvaluate {
+//        classDirectories = files(classDirectories.files.collect {
+//            fileTree(dir: it, exclude: [
+//                    'br/com/poc/configuration/Application**'
+//            ])
+//        })
+//    }
+//}
+
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.5
+            }
+        }
+
+        rule {
+            enabled = false
+            element = 'CLASS'
+            includes = ['org.gradle.*']
+
+            limit {
+                counter = 'LINE'
+                value = 'TOTALCOUNT'
+                maximum = 0.3
+            }
+        }
+    }
+}

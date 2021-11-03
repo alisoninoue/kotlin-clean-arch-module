@@ -1,0 +1,102 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
+    id "org.jetbrains.kotlin.kapt" version "${kotlinVersion}"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id 'info.solidsoft.pitest' version '1.6.0'
+    id 'jacoco'
+    id "org.wrlyonsjr.jacoco-full-report" version "0.0.6"
+    id 'idea'
+}
+
+version "0.1"
+group "br.com.poc"
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url "https://packages.confluent.io/maven/"
+        }
+        maven {
+            url "https://repository.mulesoft.org/nexus/content/repositories/public/"
+        }
+    }
+}
+
+configure(allprojects - project(":application")) {
+    apply plugin: "idea"
+    apply plugin: "org.jetbrains.kotlin.jvm"
+    apply plugin: "org.jetbrains.kotlin.kapt"
+    apply plugin: "jacoco"
+    apply plugin: "com.github.johnrengelman.shadow"
+    apply plugin: "info.solidsoft.pitest"
+
+    configurations.all {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    }
+
+    compileKotlin {
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_11
+            //Will retain parameter names for Java reflection
+            javaParameters = true
+        }
+    }
+
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_11
+            javaParameters = true
+        }
+    }
+
+    tasks.withType(JavaExec) {
+//        classpath += configurations.developmentOnly
+        jvmArgs('-XX:TieredStopAtLevel=1', '-Dcom.sun.management.jmxremote')
+    }
+
+    test {
+        useJUnitPlatform()
+        //finalizedBy jacocoTestReport
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs 'build/generated/source/proto/main/grpc'
+                srcDirs 'build/generated/source/proto/main/grpckt'
+                srcDirs 'build/generated/source/proto/main/java'
+            }
+        }
+    }
+
+    dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+        pitest('org.pitest:pitest-junit5-plugin:0.14')
+    }
+}
+
+tasks {
+    shadowJar {
+        mergeServiceFiles()
+    }
+    pitest {
+        outputFormats.set(['XML', 'HTML'])
+        testPlugin.set("junit5")
+        mainSourceSets.set([sourceSets.main])
+        testSourceSets.set([sourceSets.test])
+    }
+    //check.dependsOn "jacocoTestCoverageVerification"
+    //check.dependsOn "pitest"
+}
+
+task jacocoMergeTest(type: JacocoMerge) {
+    destinationFile = file("$buildDir/jacoco/all-test.exec")
+    executionData = project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+}
+
+
+

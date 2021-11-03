@@ -1,0 +1,8 @@
+rootProject.name = 'kotlin-clean-arch-module'
+
+include "application:configuration"
+include "application:core"
+include "application:dataproviders"
+include "application:entrypoints"
+
+include "integrationTest"
